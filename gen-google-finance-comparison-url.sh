@@ -3,7 +3,7 @@
 if ! command -v jq &> /dev/null
 then
     echo "jq could not be found, please install jq from https://stedolan.github.io/jq/download/"
-    exit 1
+    exit
 fi
 
 BASE_URL="https://www.google.com/finance/quote/"
@@ -11,6 +11,14 @@ PROCESSED_BASE_STOCK="NDAQ:NASDAQ"
 BASE_STOCK=""
 PARAMS="?comparison="
 MAX_NUM=100
+CORRECTIONS=(
+    's/OTC Markets/OTCMKTS/g'
+    's/Industry/NASDAQ/g'
+    's/VGT:NYSE/VGT:NYSEARCA/g'
+    's/NYSE:VGT/NYSEARCA:VGT/g'
+    's/WISH:OTCMKTS/WISH:NASDAQ/g'
+    's/OTCMKTS:WISH/NASDAQ:WISH/g'
+)
 
 main() {
     if [[ ! -z "$BASE_STOCK" ]]; then
@@ -43,7 +51,11 @@ main() {
         done < temp_pipe
         rm temp_pipe
     fi
-    echo $URL | sed -e 's/OTC Markets/OTCMKTS/g' | sed -e 's/Industry/NASDAQ/g'
+    for i in "${CORRECTIONS[@]}"; do
+        URL=$(echo $URL | sed -e "$i")
+    done
+    echo $URL
+    #echo $URL | sed -e 's/OTC Markets/OTCMKTS/g' | sed -e 's/Industry/NASDAQ/g'
 }
 
 while [[ $# > 0 ]]
